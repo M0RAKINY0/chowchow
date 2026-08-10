@@ -4,25 +4,21 @@ export const seedData = {
       email: "customer@chowchow.local",
       fullName: "Demo Customer",
       role: "CUSTOMER",
-      passwordHash: "seed-password-hash-placeholder",
     },
     {
       email: "admin@chowchow.local",
       fullName: "Demo Admin",
       role: "ADMIN",
-      passwordHash: "seed-password-hash-placeholder",
     },
     {
       email: "vendor.one@chowchow.local",
       fullName: "Demo Vendor One",
       role: "VENDOR",
-      passwordHash: "seed-password-hash-placeholder",
     },
     {
       email: "vendor.two@chowchow.local",
       fullName: "Demo Vendor Two",
       role: "VENDOR",
-      passwordHash: "seed-password-hash-placeholder",
     },
   ] as const,
   vendors: [

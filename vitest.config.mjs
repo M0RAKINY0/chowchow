@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    setupFiles: ["./src/test-setup.ts"],
+    fileParallelism: false,
     reporters: ["default"],
   },
 });

@@ -1,19 +1,26 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import { seedData } from "../src/seed-data.js";
+import { hashPassword } from "../src/modules/auth/password.js";
 
 const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
+  const seedPassword = process.env.SEED_PASSWORD;
+  if (!seedPassword) {
+    throw new Error("SEED_PASSWORD must be set before running the seed script");
+  }
+  const passwordHash = await hashPassword(seedPassword);
+
   const users = new Map<string, { id: string }>();
   for (const user of seedData.users) {
     const record = await prisma.user.upsert({
       where: { email: user.email },
-      update: { fullName: user.fullName, role: user.role as Prisma.UserRole, isActive: true },
+      update: { fullName: user.fullName, role: user.role as Prisma.UserRole, passwordHash, isActive: true },
       create: {
         email: user.email,
         fullName: user.fullName,
         role: user.role as Prisma.UserRole,
-        passwordHash: user.passwordHash,
+        passwordHash,
       },
       select: { id: true },
     });
