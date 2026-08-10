@@ -7,6 +7,10 @@ import {
 } from "@prisma/client";
 import { AppError } from "../../errors.js";
 import { writeAuditEvent } from "../audit/audit.service.js";
+import {
+  invalidatePopularFoodCache,
+  type PopularFoodCache,
+} from "../popular/popular-food.cache.js";
 import type {
   CreateCategoryInput,
   CreateMenuItemInput,
@@ -83,7 +87,10 @@ function rethrowConflict(error: unknown, code: string, message: string): never {
   throw error;
 }
 
-export function createVendorService(input: { prisma: PrismaClient }) {
+export function createVendorService(input: {
+  prisma: PrismaClient;
+  popularFoodCache?: PopularFoodCache;
+}) {
   async function listPublicVendors(query: VendorListQuery) {
     const where: Prisma.VendorWhereInput = {
       isActive: true,
@@ -251,6 +258,7 @@ export function createVendorService(input: { prisma: PrismaClient }) {
       metadata: { fields: Object.keys(vendorInput) },
       ...metadata,
     });
+    await invalidatePopularFoodCache(input.popularFoodCache, vendor.id);
     return vendor;
   }
 
@@ -355,7 +363,7 @@ export function createVendorService(input: { prisma: PrismaClient }) {
     await getVendorForManagement(vendorId);
     await validateCategory(vendorId, menuItemInput.categoryId);
     try {
-      return await input.prisma.$transaction(async (transaction) => {
+      const menuItem = await input.prisma.$transaction(async (transaction) => {
         const data: Prisma.MenuItemUncheckedCreateInput = {
           vendorId,
           name: menuItemInput.name,
@@ -380,6 +388,8 @@ export function createVendorService(input: { prisma: PrismaClient }) {
         });
         return menuItem;
       });
+      await invalidatePopularFoodCache(input.popularFoodCache, vendorId);
+      return menuItem;
     } catch (error) {
       rethrowConflict(
         error,
@@ -428,6 +438,7 @@ export function createVendorService(input: { prisma: PrismaClient }) {
         metadata: { vendorId, fields: Object.keys(menuItemInput) },
         ...metadata,
       });
+      await invalidatePopularFoodCache(input.popularFoodCache, vendorId);
       return updatedMenuItem;
     } catch (error) {
       rethrowConflict(

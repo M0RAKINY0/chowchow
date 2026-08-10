@@ -1,6 +1,10 @@
 import { Prisma, type OrderStatus, type PrismaClient } from "@prisma/client";
 import { AppError } from "../../errors.js";
 import { writeAuditEvent } from "../audit/audit.service.js";
+import {
+  invalidatePopularFoodCache,
+  type PopularFoodCache,
+} from "../popular/popular-food.cache.js";
 import type {
   OrderListQuery,
   OrderStatusInput,
@@ -67,7 +71,10 @@ function toPublicOrder(order: OrderWithDetails) {
   };
 }
 
-export function createOrderService(input: { prisma: PrismaClient }) {
+export function createOrderService(input: {
+  prisma: PrismaClient;
+  popularFoodCache?: PopularFoodCache;
+}) {
   async function findOrder(orderId: string): Promise<OrderWithDetails> {
     const order = await input.prisma.order.findUnique({
       where: { id: orderId },
@@ -294,6 +301,10 @@ export function createOrderService(input: { prisma: PrismaClient }) {
       },
     );
 
+    await invalidatePopularFoodCache(
+      input.popularFoodCache,
+      updatedOrder.vendorId,
+    );
     return { order: toPublicOrder(updatedOrder) };
   }
 

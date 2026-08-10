@@ -8,6 +8,10 @@ import {
 import { calculateOrderTotals } from "../../domain/money.js";
 import { AppError } from "../../errors.js";
 import { writeAuditEvent } from "../audit/audit.service.js";
+import {
+  invalidatePopularFoodCache,
+  type PopularFoodCache,
+} from "../popular/popular-food.cache.js";
 import type {
   AddCartItemInput,
   CheckoutInput,
@@ -117,6 +121,7 @@ function serializeOrder(order: OrderWithDetails) {
 export function createCartService(input: {
   prisma: PrismaClient;
   now?: () => Date;
+  popularFoodCache?: PopularFoodCache;
 }) {
   const now = input.now ?? (() => new Date());
 
@@ -466,6 +471,7 @@ export function createCartService(input: {
           include: orderInclude,
         });
       });
+      await invalidatePopularFoodCache(input.popularFoodCache, order.vendorId);
       return { order: serializeOrder(order), replayed: false };
     } catch (error) {
       if (isUniqueConstraintError(error)) {

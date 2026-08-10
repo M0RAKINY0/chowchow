@@ -23,6 +23,9 @@ import {
   createVendorOrderRouter,
 } from "./modules/orders/order.routes.js";
 import { createOrderService } from "./modules/orders/order.service.js";
+import { createPopularFoodRouter } from "./modules/popular/popular-food.routes.js";
+import { createPopularFoodService } from "./modules/popular/popular-food.service.js";
+import { createPopularFoodCache } from "./modules/popular/popular-food.cache.js";
 
 export function createApp(config: AppConfig = loadConfig()): Express {
   initializeSentry(config);
@@ -39,18 +42,24 @@ export function createApp(config: AppConfig = loadConfig()): Express {
   );
   app.use(express.json({ limit: "1mb" }));
 
+  const popularFoodCache = createPopularFoodCache(config);
+  const popularFoodService = createPopularFoodService({
+    prisma,
+    cache: popularFoodCache,
+  });
+  app.use("/api/v1/vendors", createPopularFoodRouter(popularFoodService));
   app.use(
     "/api/v1/auth",
     createAuthRouter(createAuthService({ prisma, config })),
   );
   app.use(
     "/api/v1/vendors",
-    createVendorRouter(createVendorService({ prisma })),
+    createVendorRouter(createVendorService({ prisma, popularFoodCache })),
   );
-  const cartService = createCartService({ prisma });
+  const cartService = createCartService({ prisma, popularFoodCache });
   app.use("/api/v1/carts", createCartRouter(cartService));
   app.use("/api/v1/checkout", createCheckoutRouter(cartService));
-  const orderService = createOrderService({ prisma });
+  const orderService = createOrderService({ prisma, popularFoodCache });
   app.use("/api/v1/orders", createOrderRouter(orderService));
   app.use("/api/v1/vendors", createVendorOrderRouter(orderService));
 
