@@ -18,6 +18,11 @@ import {
   createCheckoutRouter,
 } from "./modules/cart/cart.routes.js";
 import { createCartService } from "./modules/cart/cart.service.js";
+import {
+  createOrderRouter,
+  createVendorOrderRouter,
+} from "./modules/orders/order.routes.js";
+import { createOrderService } from "./modules/orders/order.service.js";
 
 export function createApp(config: AppConfig = loadConfig()): Express {
   initializeSentry(config);
@@ -45,6 +50,9 @@ export function createApp(config: AppConfig = loadConfig()): Express {
   const cartService = createCartService({ prisma });
   app.use("/api/v1/carts", createCartRouter(cartService));
   app.use("/api/v1/checkout", createCheckoutRouter(cartService));
+  const orderService = createOrderService({ prisma });
+  app.use("/api/v1/orders", createOrderRouter(orderService));
+  app.use("/api/v1/vendors", createVendorOrderRouter(orderService));
 
   app.get("/health/live", (_request, response) => {
     response.status(200).json({ status: "ok" });
