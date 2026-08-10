@@ -2,6 +2,7 @@ import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
 import { pinoHttp } from "pino-http";
+import swaggerUi from "swagger-ui-express";
 import { loadConfig, type AppConfig } from "./config.js";
 import { prisma } from "./db.js";
 import { AppError } from "./errors.js";
@@ -26,6 +27,7 @@ import { createOrderService } from "./modules/orders/order.service.js";
 import { createPopularFoodRouter } from "./modules/popular/popular-food.routes.js";
 import { createPopularFoodService } from "./modules/popular/popular-food.service.js";
 import { createPopularFoodCache } from "./modules/popular/popular-food.cache.js";
+import { openApiDocument } from "./docs/openapi.js";
 
 export function createApp(config: AppConfig = loadConfig()): Express {
   initializeSentry(config);
@@ -41,6 +43,11 @@ export function createApp(config: AppConfig = loadConfig()): Express {
     }),
   );
   app.use(express.json({ limit: "1mb" }));
+
+  app.get("/docs/openapi.json", (_request, response) => {
+    response.status(200).json(openApiDocument);
+  });
+  app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
   const popularFoodCache = createPopularFoodCache(config);
   const popularFoodService = createPopularFoodService({

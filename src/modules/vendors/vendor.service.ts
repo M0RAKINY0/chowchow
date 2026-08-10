@@ -50,13 +50,6 @@ type PublicMenuItem = Pick<
   | "updatedAt"
 >;
 
-type PublicMenuCategory = Pick<
-  MenuCategory,
-  "id" | "name" | "sortOrder" | "isActive"
-> & {
-  items: PublicMenuItem[];
-};
-
 function toPublicVendor(vendor: PublicVendor): PublicVendor {
   return vendor;
 }

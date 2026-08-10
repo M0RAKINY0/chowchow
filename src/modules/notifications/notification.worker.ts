@@ -46,12 +46,8 @@ function waitForNextPoll(
   }
 
   return new Promise((resolve) => {
-    let timeout: NodeJS.Timeout | undefined;
-
     const cleanup = () => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
+      clearTimeout(timeout);
       signal?.removeEventListener("abort", onAbort);
     };
 
@@ -60,7 +56,7 @@ function waitForNextPoll(
       resolve();
     };
 
-    timeout = setTimeout(() => {
+    const timeout = setTimeout(() => {
       cleanup();
       resolve();
     }, milliseconds);
