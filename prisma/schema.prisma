@@ -41,65 +41,65 @@ enum NotificationStatus {
 }
 
 model User {
-  id                   String               @id @default(uuid()) @db.Uuid
-  email                String               @unique @db.VarChar(320)
-  passwordHash         String
-  fullName             String
-  role                 UserRole             @default(CUSTOMER)
-  isActive             Boolean              @default(true)
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-  refreshTokens        RefreshToken[]
-  vendorMemberships    VendorMembership[]
-  carts                Cart[]               @relation("CustomerCarts")
-  customerOrders       Order[]              @relation("CustomerOrders")
-  statusChanges        OrderStatusHistory[] @relation("StatusChangeActor")
-  auditLogs            AuditLog[]           @relation("AuditActor")
+  id                    String                @id @default(uuid()) @db.Uuid
+  email                 String                @unique @db.VarChar(320)
+  passwordHash          String
+  fullName              String
+  role                  UserRole              @default(CUSTOMER)
+  isActive              Boolean               @default(true)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  refreshTokens         RefreshToken[]
+  vendorMemberships     VendorMembership[]
+  carts                 Cart[]                @relation("CustomerCarts")
+  customerOrders        Order[]               @relation("CustomerOrders")
+  statusChanges         OrderStatusHistory[]  @relation("StatusChangeActor")
+  auditLogs             AuditLog[]            @relation("AuditActor")
   checkoutIdempotencies CheckoutIdempotency[]
 
   @@index([role])
 }
 
 model RefreshToken {
-  id         String    @id @default(uuid()) @db.Uuid
-  userId     String    @db.Uuid
-  tokenHash  String    @unique
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  userAgent  String?
-  ipAddress  String?
-  createdAt  DateTime  @default(now())
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
 }
 
 model Vendor {
-  id               String             @id @default(uuid()) @db.Uuid
-  name             String
-  slug             String             @unique
+  id                String             @id @default(uuid()) @db.Uuid
+  name              String
+  slug              String             @unique
   notificationEmail String             @db.VarChar(320)
-  deliveryFeeKobo  Int
-  isActive         Boolean            @default(true)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  memberships      VendorMembership[]
-  categories       MenuCategory[]
-  menuItems        MenuItem[]
-  carts            Cart[]
-  orders           Order[]
+  deliveryFeeKobo   Int
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  memberships       VendorMembership[]
+  categories        MenuCategory[]
+  menuItems         MenuItem[]
+  carts             Cart[]
+  orders            Order[]
 
   @@index([isActive, name])
 }
 
 model VendorMembership {
-  id        String                @id @default(uuid()) @db.Uuid
-  userId    String                @db.Uuid
-  vendorId  String                @db.Uuid
-  role      VendorMembershipRole  @default(MANAGER)
-  createdAt DateTime              @default(now())
-  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vendor    Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  id        String               @id @default(uuid()) @db.Uuid
+  userId    String               @db.Uuid
+  vendorId  String               @db.Uuid
+  role      VendorMembershipRole @default(MANAGER)
+  createdAt DateTime             @default(now())
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor    Vendor               @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 
   @@unique([userId, vendorId])
   @@index([vendorId])
@@ -155,69 +155,70 @@ model Cart {
 }
 
 model CartItem {
-  id         String   @id @default(uuid()) @db.Uuid
-  cartId     String   @db.Uuid
-  menuItemId String   @db.Uuid
-  quantity   Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid()) @db.Uuid
+  cartId        String   @db.Uuid
+  menuItemId    String   @db.Uuid
+  unitPriceKobo Int
+  quantity      Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  cart          Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  menuItem      MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 
   @@unique([cartId, menuItemId])
   @@index([menuItemId])
 }
 
 model Order {
-  id                   String                  @id @default(uuid()) @db.Uuid
-  orderNumber          String                  @unique
-  customerId           String                  @db.Uuid
-  vendorId             String                  @db.Uuid
-  status               OrderStatus             @default(PENDING_VENDOR_CONFIRMATION)
-  paymentMethod        PaymentMethod           @default(CASH_ON_DELIVERY)
-  currency             String                  @default("NGN") @db.Char(3)
-  subtotalKobo         Int
-  deliveryFeeKobo      Int
-  totalKobo            Int
-  deliveryAddress      String
-  deliveryNote         String?
-  createdAt            DateTime                @default(now())
-  updatedAt            DateTime                @updatedAt
-  customer             User                    @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Restrict)
-  vendor               Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Restrict)
-  items                OrderItem[]
-  statusHistory        OrderStatusHistory[]
-  checkoutIdempotency  CheckoutIdempotency?
+  id                  String               @id @default(uuid()) @db.Uuid
+  orderNumber         String               @unique
+  customerId          String               @db.Uuid
+  vendorId            String               @db.Uuid
+  status              OrderStatus          @default(PENDING_VENDOR_CONFIRMATION)
+  paymentMethod       PaymentMethod        @default(CASH_ON_DELIVERY)
+  currency            String               @default("NGN") @db.Char(3)
+  subtotalKobo        Int
+  deliveryFeeKobo     Int
+  totalKobo           Int
+  deliveryAddress     String
+  deliveryNote        String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  customer            User                 @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Restrict)
+  vendor              Vendor               @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  items               OrderItem[]
+  statusHistory       OrderStatusHistory[]
+  checkoutIdempotency CheckoutIdempotency?
 
   @@index([customerId, createdAt])
   @@index([vendorId, status, createdAt])
 }
 
 model OrderItem {
-  id             String    @id @default(uuid()) @db.Uuid
-  orderId        String    @db.Uuid
-  menuItemId     String?   @db.Uuid
-  nameSnapshot   String
-  unitPriceKobo  Int
-  quantity       Int
-  lineTotalKobo  Int
-  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItem       MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  id            String    @id @default(uuid()) @db.Uuid
+  orderId       String    @db.Uuid
+  menuItemId    String?   @db.Uuid
+  nameSnapshot  String
+  unitPriceKobo Int
+  quantity      Int
+  lineTotalKobo Int
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem      MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
   @@index([menuItemId])
 }
 
 model OrderStatusHistory {
-  id          String      @id @default(uuid()) @db.Uuid
-  orderId     String      @db.Uuid
+  id          String       @id @default(uuid()) @db.Uuid
+  orderId     String       @db.Uuid
   fromStatus  OrderStatus?
   toStatus    OrderStatus
-  actorUserId String?     @db.Uuid
+  actorUserId String?      @db.Uuid
   note        String?
-  createdAt   DateTime    @default(now())
-  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  actor       User?       @relation("StatusChangeActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  createdAt   DateTime     @default(now())
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actor       User?        @relation("StatusChangeActor", fields: [actorUserId], references: [id], onDelete: SetNull)
 
   @@index([orderId, createdAt])
 }
