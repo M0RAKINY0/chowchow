@@ -11,6 +11,8 @@ import { logger } from "./logger.js";
 import { initializeSentry } from "./observability.js";
 import { createAuthRouter } from "./modules/auth/auth.routes.js";
 import { createAuthService } from "./modules/auth/auth.service.js";
+import { createVendorRouter } from "./modules/vendors/vendor.routes.js";
+import { createVendorService } from "./modules/vendors/vendor.service.js";
 
 export function createApp(config: AppConfig = loadConfig()): Express {
   initializeSentry(config);
@@ -20,10 +22,21 @@ export function createApp(config: AppConfig = loadConfig()): Express {
   app.use(requestIdMiddleware);
   app.use(pinoHttp({ logger }));
   app.use(helmet());
-  app.use(cors({ origin: config.corsOrigin.split(",").map((origin) => origin.trim()) }));
+  app.use(
+    cors({
+      origin: config.corsOrigin.split(",").map((origin) => origin.trim()),
+    }),
+  );
   app.use(express.json({ limit: "1mb" }));
 
-  app.use("/api/v1/auth", createAuthRouter(createAuthService({ prisma, config })));
+  app.use(
+    "/api/v1/auth",
+    createAuthRouter(createAuthService({ prisma, config })),
+  );
+  app.use(
+    "/api/v1/vendors",
+    createVendorRouter(createVendorService({ prisma })),
+  );
 
   app.get("/health/live", (_request, response) => {
     response.status(200).json({ status: "ok" });
