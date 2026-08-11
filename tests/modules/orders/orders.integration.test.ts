@@ -1,10 +1,10 @@
 import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createApp } from "../../app.js";
-import { loadConfig } from "../../config.js";
-import { prisma } from "../../db.js";
-import { hashPassword } from "../auth/password.js";
-import { createAccessToken } from "../auth/tokens.js";
+import { createApp } from "../../../src/app.js";
+import { loadConfig } from "../../../src/config.js";
+import { prisma } from "../../../src/db.js";
+import { hashPassword } from "../../../src/modules/auth/password.js";
+import { createAccessToken } from "../../../src/modules/auth/tokens.js";
 
 const app = createApp(loadConfig());
 

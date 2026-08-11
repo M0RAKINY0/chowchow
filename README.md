@@ -128,10 +128,17 @@ The seed creates these accounts: `customer@chowchow.local`, `vendor.one@chowchow
 ```powershell
 npm test
 npm run build
-npx prettier --check src package.json
+npx prettier --check `
+  README.md package.json tsconfig.json vitest.config.mjs `
+  schemas/*.ts tests/**/*.ts `
+  src/middleware/vendor-access.ts `
+  src/modules/auth/auth.routes.ts src/modules/auth/auth.service.ts `
+  src/modules/cart/cart.routes.ts src/modules/cart/cart.service.ts `
+  src/modules/orders/order.routes.ts src/modules/orders/order.service.ts `
+  src/modules/vendors/vendor.routes.ts src/modules/vendors/vendor.service.ts
 ```
 
-Run `npm run db:migrate:deploy` and `npm run db:seed` against a configured local database before a demo. Tests use the separate `food_ordering_test` database configured by `src/test-setup.ts`.
+Run `npm run db:migrate:deploy` and `npm run db:seed` against a configured local database before a demo. Tests use the separate `food_ordering_test` database configured by `tests/test-setup.ts`.
 
 ## Project layout
 
@@ -144,6 +151,8 @@ src/modules/orders                Order queries and lifecycle transitions
 src/modules/notifications         Transactional email outbox worker
 src/modules/popular               Popular-food query, Redis adapter, and route
 src/docs/openapi.ts                OpenAPI document served by Swagger UI
+schemas/*.schemas.ts               Shared Zod request validation schemas
+tests/                              Unit and integration tests
 prisma/schema.prisma               PostgreSQL source-of-truth schema
 docker-compose.yml                 Local Redis service
 ```

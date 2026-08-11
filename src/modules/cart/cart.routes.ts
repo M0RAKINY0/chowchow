@@ -10,7 +10,7 @@ import {
   idempotencyKeySchema,
   updateCartItemSchema,
   vendorIdSchema,
-} from "./cart.schemas.js";
+} from "../../../schemas/cart.schemas.js";
 import type { CartService } from "./cart.service.js";
 import type { RequestMetadata } from "../auth/auth.service.js";
 

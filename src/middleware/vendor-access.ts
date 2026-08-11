@@ -2,7 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import type { RequestHandler } from "express";
 import { AppError } from "../errors.js";
 import { asyncHandler } from "./async-handler.js";
-import { vendorIdSchema } from "../modules/vendors/vendor.schemas.js";
+import { vendorIdSchema } from "../../schemas/vendor.schemas.js";
 
 export function requireVendorAccess(prisma: PrismaClient): RequestHandler {
   return asyncHandler(async (request, _response, next) => {

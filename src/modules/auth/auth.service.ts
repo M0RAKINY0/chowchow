@@ -10,7 +10,11 @@ import {
   hashRefreshToken,
   refreshTokenExpiresAt,
 } from "./tokens.js";
-import type { LoginInput, RefreshInput, RegisterInput } from "./auth.schemas.js";
+import type {
+  LoginInput,
+  RefreshInput,
+  RegisterInput,
+} from "../../../schemas/auth.schemas.js";
 
 export type RequestMetadata = {
   ipAddress: string | undefined;
@@ -47,7 +51,11 @@ function toPublicUser(user: User): PublicUser {
 }
 
 function invalidCredentials(): AppError {
-  return new AppError(401, "AUTH_INVALID_CREDENTIALS", "Email or password is incorrect");
+  return new AppError(
+    401,
+    "AUTH_INVALID_CREDENTIALS",
+    "Email or password is incorrect",
+  );
 }
 
 export function createAuthService(input: {
@@ -74,16 +82,28 @@ export function createAuthService(input: {
     });
 
     return {
-      accessToken: await createAccessToken({ userId: user.id, role: user.role }, input.config.jwtAccessSecret),
+      accessToken: await createAccessToken(
+        { userId: user.id, role: user.role },
+        input.config.jwtAccessSecret,
+      ),
       refreshToken,
       accessTokenExpiresIn: ACCESS_TOKEN_EXPIRES_IN_SECONDS,
     };
   }
 
-  async function register(registerInput: RegisterInput, metadata: RequestMetadata): Promise<AuthResult> {
-    const existingUser = await input.prisma.user.findUnique({ where: { email: registerInput.email } });
+  async function register(
+    registerInput: RegisterInput,
+    metadata: RequestMetadata,
+  ): Promise<AuthResult> {
+    const existingUser = await input.prisma.user.findUnique({
+      where: { email: registerInput.email },
+    });
     if (existingUser) {
-      throw new AppError(409, "AUTH_EMAIL_TAKEN", "An account with this email already exists");
+      throw new AppError(
+        409,
+        "AUTH_EMAIL_TAKEN",
+        "An account with this email already exists",
+      );
     }
 
     const passwordHash = await hashPassword(registerInput.password);
@@ -109,9 +129,16 @@ export function createAuthService(input: {
     });
   }
 
-  async function login(loginInput: LoginInput, metadata: RequestMetadata): Promise<AuthResult> {
-    const user = await input.prisma.user.findUnique({ where: { email: loginInput.email } });
-    const validPassword = user ? await verifyPassword(user.passwordHash, loginInput.password) : false;
+  async function login(
+    loginInput: LoginInput,
+    metadata: RequestMetadata,
+  ): Promise<AuthResult> {
+    const user = await input.prisma.user.findUnique({
+      where: { email: loginInput.email },
+    });
+    const validPassword = user
+      ? await verifyPassword(user.passwordHash, loginInput.password)
+      : false;
     if (!user || !user.isActive || !validPassword) {
       await writeAuditEvent(input.prisma, {
         actorUserId: user?.id ?? null,
@@ -138,7 +165,10 @@ export function createAuthService(input: {
     });
   }
 
-  async function refresh(refreshInput: RefreshInput, metadata: RequestMetadata): Promise<AuthResult> {
+  async function refresh(
+    refreshInput: RefreshInput,
+    metadata: RequestMetadata,
+  ): Promise<AuthResult> {
     const tokenHash = hashRefreshToken(refreshInput.refreshToken);
     const storedToken = await input.prisma.refreshToken.findUnique({
       where: { tokenHash },
@@ -146,7 +176,11 @@ export function createAuthService(input: {
     });
 
     if (!storedToken) {
-      throw new AppError(401, "AUTH_INVALID_REFRESH_TOKEN", "Refresh token is invalid");
+      throw new AppError(
+        401,
+        "AUTH_INVALID_REFRESH_TOKEN",
+        "Refresh token is invalid",
+      );
     }
 
     return input.prisma.$transaction(async (transaction) => {
@@ -163,16 +197,34 @@ export function createAuthService(input: {
           metadata: {},
           ...metadata,
         });
-        throw new AppError(401, "AUTH_REFRESH_REUSED", "Refresh token reuse was detected");
+        throw new AppError(
+          401,
+          "AUTH_REFRESH_REUSED",
+          "Refresh token reuse was detected",
+        );
       }
 
       if (storedToken.expiresAt <= now() || !storedToken.user.isActive) {
-        await transaction.refreshToken.update({ where: { id: storedToken.id }, data: { revokedAt: now() } });
-        throw new AppError(401, "AUTH_INVALID_REFRESH_TOKEN", "Refresh token is expired or inactive");
+        await transaction.refreshToken.update({
+          where: { id: storedToken.id },
+          data: { revokedAt: now() },
+        });
+        throw new AppError(
+          401,
+          "AUTH_INVALID_REFRESH_TOKEN",
+          "Refresh token is expired or inactive",
+        );
       }
 
-      await transaction.refreshToken.update({ where: { id: storedToken.id }, data: { revokedAt: now() } });
-      const tokens = await issueTokenPair(transaction, storedToken.user, metadata);
+      await transaction.refreshToken.update({
+        where: { id: storedToken.id },
+        data: { revokedAt: now() },
+      });
+      const tokens = await issueTokenPair(
+        transaction,
+        storedToken.user,
+        metadata,
+      );
       await writeAuditEvent(transaction, {
         actorUserId: storedToken.userId,
         action: "AUTH_REFRESHED",
@@ -185,15 +237,23 @@ export function createAuthService(input: {
     });
   }
 
-  async function logout(refreshInput: RefreshInput, metadata: RequestMetadata): Promise<void> {
+  async function logout(
+    refreshInput: RefreshInput,
+    metadata: RequestMetadata,
+  ): Promise<void> {
     const tokenHash = hashRefreshToken(refreshInput.refreshToken);
-    const storedToken = await input.prisma.refreshToken.findUnique({ where: { tokenHash } });
+    const storedToken = await input.prisma.refreshToken.findUnique({
+      where: { tokenHash },
+    });
     if (!storedToken || storedToken.revokedAt) {
       return;
     }
 
     await input.prisma.$transaction(async (transaction) => {
-      await transaction.refreshToken.update({ where: { id: storedToken.id }, data: { revokedAt: now() } });
+      await transaction.refreshToken.update({
+        where: { id: storedToken.id },
+        data: { revokedAt: now() },
+      });
       await writeAuditEvent(transaction, {
         actorUserId: storedToken.userId,
         action: "AUTH_LOGGED_OUT",
@@ -208,7 +268,11 @@ export function createAuthService(input: {
   async function getCurrentUser(userId: string): Promise<PublicUser> {
     const user = await input.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.isActive) {
-      throw new AppError(401, "AUTH_UNAUTHORIZED", "Authentication is required");
+      throw new AppError(
+        401,
+        "AUTH_UNAUTHORIZED",
+        "Authentication is required",
+      );
     }
     return toPublicUser(user);
   }

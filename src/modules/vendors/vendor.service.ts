@@ -19,7 +19,7 @@ import type {
   UpdateMenuItemInput,
   UpdateVendorInput,
   VendorListQuery,
-} from "./vendor.schemas.js";
+} from "../../../schemas/vendor.schemas.js";
 
 type RequestMetadata = {
   ipAddress: string | undefined;

@@ -16,7 +16,7 @@ import type {
   AddCartItemInput,
   CheckoutInput,
   UpdateCartItemInput,
-} from "./cart.schemas.js";
+} from "../../../schemas/cart.schemas.js";
 
 const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1_000;
 

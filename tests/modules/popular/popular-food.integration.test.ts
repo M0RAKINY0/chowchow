@@ -10,14 +10,14 @@ import {
   it,
   vi,
 } from "vitest";
-import { prisma } from "../../db.js";
+import { prisma } from "../../../src/db.js";
 import {
   createMemoryPopularFoodCache,
   createRedisPopularFoodCache,
   type PopularFoodCache,
-} from "./popular-food.cache.js";
-import { createPopularFoodRouter } from "./popular-food.routes.js";
-import { createPopularFoodService } from "./popular-food.service.js";
+} from "../../../src/modules/popular/popular-food.cache.js";
+import { createPopularFoodRouter } from "../../../src/modules/popular/popular-food.routes.js";
+import { createPopularFoodService } from "../../../src/modules/popular/popular-food.service.js";
 
 const vendorIds: string[] = [];
 const userIds: string[] = [];

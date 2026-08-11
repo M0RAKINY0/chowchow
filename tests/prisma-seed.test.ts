@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { seedData } from "./seed-data.js";
+import { seedData } from "../src/seed-data.js";
 
 describe("seed data", () => {
   it("contains two vendors with menu categories and items", () => {

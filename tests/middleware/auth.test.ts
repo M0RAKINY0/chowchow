@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { requireRoles } from "./auth.js";
+import { requireRoles } from "../../src/middleware/auth.js";
 
 describe("requireRoles", () => {
   it("rejects an authenticated customer from an admin-only route", () => {

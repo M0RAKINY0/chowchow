@@ -9,7 +9,7 @@ import type {
   OrderListQuery,
   OrderStatusInput,
   UpdateOrderStatusInput,
-} from "./order.schemas.js";
+} from "../../../schemas/order.schemas.js";
 
 const orderInclude = {
   customer: { select: { id: true, email: true, fullName: true } },

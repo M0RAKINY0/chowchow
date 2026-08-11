@@ -15,7 +15,7 @@ import {
   updateVendorSchema,
   vendorIdSchema,
   vendorListQuerySchema,
-} from "./vendor.schemas.js";
+} from "../../../schemas/vendor.schemas.js";
 import type { VendorService } from "./vendor.service.js";
 
 function parse<T>(

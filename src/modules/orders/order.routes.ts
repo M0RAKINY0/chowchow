@@ -11,7 +11,7 @@ import {
   orderIdSchema,
   orderListQuerySchema,
   updateOrderStatusSchema,
-} from "./order.schemas.js";
+} from "../../../schemas/order.schemas.js";
 import type { OrderService } from "./order.service.js";
 
 function parse<T>(

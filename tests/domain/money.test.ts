@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateOrderTotals } from "./money.js";
+import { calculateOrderTotals } from "../../src/domain/money.js";
 
 describe("calculateOrderTotals", () => {
   it("calculates integer-kobo subtotal, delivery fee, and total", () => {

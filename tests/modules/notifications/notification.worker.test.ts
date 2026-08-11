@@ -7,17 +7,17 @@ import {
   it,
   vi,
 } from "vitest";
-import { prisma } from "../../db.js";
+import { prisma } from "../../../src/db.js";
 import {
   createConsoleEmailSender,
   createResendEmailSender,
   type EmailMessage,
-} from "./email.sender.js";
-import { renderNotification } from "./notification.templates.js";
+} from "../../../src/modules/notifications/email.sender.js";
+import { renderNotification } from "../../../src/modules/notifications/notification.templates.js";
 import {
   createNotificationWorker,
   type EmailSender,
-} from "./notification.worker.js";
+} from "../../../src/modules/notifications/notification.worker.js";
 
 const basePayload = {
   orderId: "order-1",
