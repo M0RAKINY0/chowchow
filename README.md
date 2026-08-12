@@ -13,7 +13,7 @@ The API is designed as a capability demo: customers can browse menus, manage a v
 - Order lifecycle validation, status history, cancellation rules, and role-scoped order queries.
 - Transactional notification outbox with console and Resend adapters, retry/backoff, stale-lock recovery, and Sentry capture for exhausted failures.
 - Redis-backed `GET /api/v1/vendors/:vendorId/popular-items` with PostgreSQL fallback and cache invalidation after order/menu changes.
-- Swagger UI at [`/docs`](http://localhost:4000/docs), the raw runtime document at [`/docs/openapi.json`](http://localhost:4000/docs/openapi.json), and the committed OpenAPI artifact at [`docs/openapi.json`](docs/openapi.json). Regenerate the artifact with `npm run docs:openapi` after changing `src/docs/openapi.ts`.
+- Swagger UI at [`/docs`](http://localhost:4000/docs), the raw runtime document at [`/docs/openapi.json`](http://localhost:4000/docs/openapi.json), and the committed OpenAPI artifact at [`openapi.json`](openapi.json). Regenerate the artifact with `npm run docs:export` after changing `src/docs/openapi.ts`.
 
 ## Requirements
 
@@ -128,9 +128,9 @@ The seed creates these accounts: `customer@chowchow.local`, `vendor.one@chowchow
 ```powershell
 npm test
 npm run build
-npm run docs:openapi
+npm run docs:export
 npx prettier --check `
-  README.md package.json scripts/generate-openapi.ts docs/openapi.json `
+  README.md package.json src/docs/export.ts openapi.json `
   tsconfig.json vitest.config.mjs `
   schemas/*.ts tests/**/*.ts `
   src/middleware/vendor-access.ts `
@@ -153,7 +153,8 @@ src/modules/orders                Order queries and lifecycle transitions
 src/modules/notifications         Transactional email outbox worker
 src/modules/popular               Popular-food query, Redis adapter, and route
 src/docs/openapi.ts                OpenAPI document served by Swagger UI
-docs/openapi.json                  Committed OpenAPI artifact generated from src/docs/openapi.ts
+src/docs/export.ts                 OpenAPI artifact exporter
+openapi.json                       Committed OpenAPI artifact generated from src/docs/openapi.ts
 schemas/*.schemas.ts               Shared Zod request validation schemas
 tests/                              Unit and integration tests
 prisma/schema.prisma               PostgreSQL source-of-truth schema
