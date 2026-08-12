@@ -1,6 +1,9 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
+import { openApiDocument } from "../../src/docs/openapi.js";
 
 describe("API documentation", () => {
   it("serves the OpenAPI document", async () => {
@@ -22,5 +25,14 @@ describe("API documentation", () => {
 
     expect(response.status).toBe(200);
     expect(response.text).toContain("swagger-ui");
+  });
+
+  it("keeps the committed OpenAPI JSON synchronized with the runtime document", async () => {
+    const fileContents = await readFile(
+      resolve(process.cwd(), "docs/openapi.json"),
+      "utf8",
+    );
+
+    expect(JSON.parse(fileContents)).toEqual(openApiDocument);
   });
 });
