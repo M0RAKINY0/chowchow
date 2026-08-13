@@ -60,6 +60,32 @@ The local development database in this workspace is `food_ordering_dev` with the
 
    With `EMAIL_PROVIDER=console`, the worker logs email messages instead of calling Resend. To send real email, set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, and a verified `EMAIL_FROM` address.
 
+## Build and run the production image
+
+The repository includes one multi-stage production image for both the API and notification worker. PostgreSQL stays outside Docker and all secrets are supplied at runtime.
+
+For Docker Desktop and a PostgreSQL instance running on the host machine, copy the container environment example and replace its placeholders:
+
+```powershell
+Copy-Item docker.env.example docker.env
+docker compose up -d redis
+docker build --tag chowchow-backend:local .
+```
+
+Run the API image:
+
+```powershell
+docker run --rm --name chowchow-api --env-file docker.env -p 4000:4000 chowchow-backend:local
+```
+
+Run the notification worker from the same image in a separate terminal:
+
+```powershell
+docker run --rm --name chowchow-worker --env-file docker.env chowchow-backend:local node dist/src/worker.js
+```
+
+The API health check is available at [`http://localhost:4000/health/live`](http://localhost:4000/health/live). `host.docker.internal` is a Docker Desktop host address for local development; replace it with managed database and Redis hostnames before deploying. Your local PostgreSQL server must accept connections from the Docker Desktop host gateway; if it only listens on `localhost`, update its local listener and access rules without exposing it publicly.
+
 ## Demo walkthrough
 
 The seed creates these accounts: `customer@chowchow.local`, `vendor.one@chowchow.local`, `vendor.two@chowchow.local`, and `admin@chowchow.local`. They all use the `SEED_PASSWORD` value from `.env`.
