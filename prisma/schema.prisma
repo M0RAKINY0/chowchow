@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  VENDOR
+  ADMIN
+}
+
+enum VendorMembershipRole {
+  OWNER
+  MANAGER
+}
+
+enum OrderStatus {
+  PENDING_VENDOR_CONFIRMATION
+  CONFIRMED
+  PREPARING
+  READY_FOR_DISPATCH
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+}
+
+enum NotificationStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
+model User {
+  id                    String                @id @default(uuid()) @db.Uuid
+  email                 String                @unique @db.VarChar(320)
+  passwordHash          String
+  fullName              String
+  role                  UserRole              @default(CUSTOMER)
+  isActive              Boolean               @default(true)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  refreshTokens         RefreshToken[]
+  vendorMemberships     VendorMembership[]
+  carts                 Cart[]                @relation("CustomerCarts")
+  customerOrders        Order[]               @relation("CustomerOrders")
+  statusChanges         OrderStatusHistory[]  @relation("StatusChangeActor")
+  auditLogs             AuditLog[]            @relation("AuditActor")
+  checkoutIdempotencies CheckoutIdempotency[]
+
+  @@index([role])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model Vendor {
+  id                String             @id @default(uuid()) @db.Uuid
+  name              String
+  slug              String             @unique
+  notificationEmail String             @db.VarChar(320)
+  deliveryFeeKobo   Int
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  memberships       VendorMembership[]
+  categories        MenuCategory[]
+  menuItems         MenuItem[]
+  carts             Cart[]
+  orders            Order[]
+
+  @@index([isActive, name])
+}
+
+model VendorMembership {
+  id        String               @id @default(uuid()) @db.Uuid
+  userId    String               @db.Uuid
+  vendorId  String               @db.Uuid
+  role      VendorMembershipRole @default(MANAGER)
+  createdAt DateTime             @default(now())
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor    Vendor               @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vendorId])
+  @@index([vendorId])
+}
+
+model MenuCategory {
+  id        String     @id @default(uuid()) @db.Uuid
+  vendorId  String     @db.Uuid
+  name      String
+  sortOrder Int        @default(0)
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  vendor    Vendor     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  menuItems MenuItem[]
+
+  @@unique([vendorId, name])
+  @@index([vendorId, isActive, sortOrder])
+}
+
+model MenuItem {
+  id          String        @id @default(uuid()) @db.Uuid
+  vendorId    String        @db.Uuid
+  categoryId  String?       @db.Uuid
+  name        String
+  description String?
+  priceKobo   Int
+  imageUrl    String?
+  isAvailable Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  vendor      Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  category    MenuCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@unique([vendorId, name])
+  @@index([vendorId, isAvailable])
+}
+
+model Cart {
+  id         String     @id @default(uuid()) @db.Uuid
+  customerId String     @db.Uuid
+  vendorId   String     @db.Uuid
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  customer   User       @relation("CustomerCarts", fields: [customerId], references: [id], onDelete: Cascade)
+  vendor     Vendor     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  items      CartItem[]
+
+  @@unique([customerId, vendorId])
+  @@index([vendorId])
+}
+
+model CartItem {
+  id            String   @id @default(uuid()) @db.Uuid
+  cartId        String   @db.Uuid
+  menuItemId    String   @db.Uuid
+  unitPriceKobo Int
+  quantity      Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  cart          Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  menuItem      MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, menuItemId])
+  @@index([menuItemId])
+}
+
+model Order {
+  id                  String               @id @default(uuid()) @db.Uuid
+  orderNumber         String               @unique
+  customerId          String               @db.Uuid
+  vendorId            String               @db.Uuid
+  status              OrderStatus          @default(PENDING_VENDOR_CONFIRMATION)
+  paymentMethod       PaymentMethod        @default(CASH_ON_DELIVERY)
+  currency            String               @default("NGN") @db.Char(3)
+  subtotalKobo        Int
+  deliveryFeeKobo     Int
+  totalKobo           Int
+  deliveryAddress     String
+  deliveryNote        String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  customer            User                 @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: Restrict)
+  vendor              Vendor               @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  items               OrderItem[]
+  statusHistory       OrderStatusHistory[]
+  checkoutIdempotency CheckoutIdempotency?
+
+  @@index([customerId, createdAt])
+  @@index([vendorId, status, createdAt])
+}
+
+model OrderItem {
+  id            String    @id @default(uuid()) @db.Uuid
+  orderId       String    @db.Uuid
+  menuItemId    String?   @db.Uuid
+  nameSnapshot  String
+  unitPriceKobo Int
+  quantity      Int
+  lineTotalKobo Int
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem      MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([menuItemId])
+}
+
+model OrderStatusHistory {
+  id          String       @id @default(uuid()) @db.Uuid
+  orderId     String       @db.Uuid
+  fromStatus  OrderStatus?
+  toStatus    OrderStatus
+  actorUserId String?      @db.Uuid
+  note        String?
+  createdAt   DateTime     @default(now())
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actor       User?        @relation("StatusChangeActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actorUserId String?  @db.Uuid
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  actor       User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId, createdAt])
+}
+
+model NotificationOutbox {
+  id             String             @id @default(uuid()) @db.Uuid
+  dedupeKey      String             @unique
+  type           String
+  aggregateType  String
+  aggregateId    String
+  recipientEmail String             @db.VarChar(320)
+  payload        Json
+  status         NotificationStatus @default(PENDING)
+  attempts       Int                @default(0)
+  nextAttemptAt  DateTime           @default(now())
+  lockedAt       DateTime?
+  lastError      String?
+  sentAt         DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([aggregateType, aggregateId])
+}
+
+model CheckoutIdempotency {
+  id         String   @id @default(uuid()) @db.Uuid
+  customerId String   @db.Uuid
+  key        String   @db.VarChar(255)
+  orderId    String?  @unique @db.Uuid
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  customer   User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order      Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@unique([customerId, key])
+  @@index([expiresAt])
+}

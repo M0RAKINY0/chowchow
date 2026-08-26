@@ -1,0 +1,57 @@
+{
+  "name": "chowchow-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "dev:worker": "tsx watch src/worker.ts",
+    "build": "tsc -p tsconfig.json",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "docs:export": "tsx src/docs/export.ts openapi.json",
+    "start": "node dist/src/server.js",
+    "start:worker": "node dist/src/worker.js",
+    "test": "vitest run --config vitest.config.mjs",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --check ."
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "@sentry/node": "^9.22.0",
+    "argon2": "^0.41.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "jose": "^6.0.10",
+    "pino": "^9.6.0",
+    "pino-http": "^10.4.0",
+    "redis": "^6.2.0",
+    "resend": "^6.18.1",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.13.10",
+    "@types/supertest": "^6.0.2",
+    "@types/swagger-ui-express": "^4.1.8",
+    "eslint": "^10.8.1",
+    "prettier": "^3.5.3",
+    "prisma": "^6.6.0",
+    "supertest": "^7.1.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^3.0.8"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}
